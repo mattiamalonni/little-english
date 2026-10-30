@@ -31,6 +31,7 @@ import {
   type Round,
   type Word,
 } from "@/lib/games";
+import { wordAudioPath } from "@/lib/audio";
 
 type PlayContext = {
   round: Round | null;
@@ -74,48 +75,55 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sound, setSound] = useState(true);
   const [audioError, setAudioError] = useState("");
   const pathname = usePathname();
-  const utterance = useRef<SpeechSynthesisUtterance | null>(null);
+  const audio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     return () => {
-      window.speechSynthesis?.cancel();
+      const current = audio.current;
+      audio.current = null;
+      if (current) {
+        current.onerror = null;
+        current.pause();
+        current.removeAttribute("src");
+        current.load();
+      }
     };
   }, [pathname]);
 
+  function stopAudio() {
+    const current = audio.current;
+    audio.current = null;
+    if (current) {
+      current.onerror = null;
+      current.pause();
+      current.removeAttribute("src");
+      current.load();
+    }
+  }
+
   function speak(text: string) {
     if (!sound) return;
-    if (!("speechSynthesis" in window)) {
-      setAudioError(
-        "Audio non disponibile in questo browser. Puoi continuare con le parole scritte.",
-      );
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const speech = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    speech.voice =
-      voices.find((voice) => voice.lang === "en-GB") ??
-      voices.find((voice) => voice.lang.startsWith("en")) ??
-      null;
-    speech.lang = speech.voice?.lang ?? "en-GB";
-    speech.rate = 0.8;
-    speech.onerror = (event) => {
-      if (event.error !== "interrupted" && event.error !== "canceled") {
-        setAudioError(
-          "La voce non risponde. Puoi continuare con le parole scritte.",
-        );
-      }
-    };
-    utterance.current = speech;
+    stopAudio();
+    const clip = new Audio(wordAudioPath(text));
+    audio.current = clip;
     setAudioError("");
-    window.speechSynthesis.speak(speech);
+    function reportError() {
+      if (audio.current !== clip) return;
+      setAudioError(
+        "Audio non disponibile. Riprova premendo Ascolta oppure continua con le parole scritte.",
+      );
+    }
+    clip.onerror = reportError;
+    void clip.play().catch(reportError);
   }
 
   function start(gameId: GameId) {
+    stopAudio();
     setRound((previous) => createRound(gameId, previous ?? undefined));
   }
 
   function answer(selected: Word) {
+    stopAudio();
     setRound((current) => {
       if (!current || current.answers.length >= current.questions.length)
         return current;
@@ -167,7 +175,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               aria-label={sound ? "Disattiva audio" : "Attiva audio"}
               aria-pressed={sound}
               onClick={() => {
-                window.speechSynthesis?.cancel();
+                stopAudio();
                 setSound(!sound);
               }}
             >
@@ -201,7 +209,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             target="_blank"
             rel="noreferrer"
           >
-            Illustrazioni: Twemoji
+            Twemoji
+          </a>
+          {" e "}
+          <a href="/illustrations/ATTRIBUTION.md">illustrazioni originali</a>
+          {" "}
+          <span className="footer-divider">/</span>{" "}
+          <a
+            href="https://elevenlabs.io"
+            target="_blank"
+            rel="noreferrer"
+            title="Audio generato con Alice — elevenlabs.io"
+          >
+            Audio: elevenlabs.io
           </a>
         </span>
       </footer>
@@ -221,14 +241,14 @@ function GameArt({ id }: { id: GameId }) {
           <span className="paint-dot paint-red" />
           <span className="paint-dot paint-yellow" />
           <span className="paint-dot paint-blue" />
-          <Illustration asset="1f3a8" className="art-main" />
+          <Illustration asset="paint" className="art-main" />
           <span className="art-sticker">red, blue, you!</span>
         </>
       )}
       {id === "animals" && (
         <>
-          <Illustration asset="1f981" className="art-main" />
-          <Illustration asset="1f407" className="art-side" />
+          <Illustration asset="lion" className="art-main" />
+          <Illustration asset="rabbit" className="art-side" />
           <span className="art-bubble">Hello!</span>
           <span className="art-grass grass-one" />
           <span className="art-grass grass-two" />
@@ -236,15 +256,15 @@ function GameArt({ id }: { id: GameId }) {
       )}
       {id === "objects" && (
         <>
-          <Illustration asset="1f4d5" className="art-main" />
-          <Illustration asset="270f" className="art-side" />
+          <Illustration asset="book" className="art-main" />
+          <Illustration asset="pencil" className="art-side" />
           <span className="letter-tile">Aa</span>
           <span className="art-sticker">my little world</span>
         </>
       )}
       {id === "verbs" && (
         <>
-          <Illustration asset="1f3c3" className="art-main" />
+          <Illustration asset="run" className="art-main" />
           <span className="motion-line line-one" />
           <span className="motion-line line-two" />
           <span className="art-bubble">Let&apos;s go!</span>
@@ -253,8 +273,8 @@ function GameArt({ id }: { id: GameId }) {
       )}
       {id === "food" && (
         <>
-          <Illustration asset="1f353" className="art-main" />
-          <Illustration asset="1f35e" className="art-side" />
+          <Illustration asset="strawberry" className="art-main" />
+          <Illustration asset="bread" className="art-side" />
           <span className="art-bubble">Yummy!</span>
           <span className="art-sticker">a taste of English</span>
         </>
@@ -265,6 +285,20 @@ function GameArt({ id }: { id: GameId }) {
             <span>1</span><span>2</span><span>3</span>
           </div>
           <span className="art-sticker">one, two, three!</span>
+        </>
+      )}
+      {id === "weather" && (
+        <>
+          <Illustration asset="sunny" className="art-main" />
+          <Illustration asset="rainy" className="art-side" />
+          <span className="art-sticker">look at the sky!</span>
+        </>
+      )}
+      {id === "nature" && (
+        <>
+          <Illustration asset="tree" className="art-main" />
+          <Illustration asset="flower" className="art-side" />
+          <span className="art-sticker">out in nature</span>
         </>
       )}
     </div>
@@ -303,7 +337,7 @@ export function Dashboard() {
         </div>
         <div className="welcome-art" aria-hidden="true">
           <span className="welcome-bubble">Oh, hello!</span>
-          <Illustration asset="1f680" className="welcome-rocket" />
+          <Illustration asset="rocket" className="welcome-rocket" />
           <span className="welcome-letter letter-a">a</span>
           <span className="welcome-letter letter-b">b</span>
           <span className="welcome-letter letter-c">c</span>
@@ -530,20 +564,18 @@ export function PlayGame({ game }: { game: Game }) {
         className={`question-stage ${visualChoices ? "word-stage" : "picture-stage"}`}
       >
         {visualChoices ? (
-          <>
-            <span className="english-prompt" lang="en">
-              {question.word.english}
-            </span>
-            <AudioButton word={question.word.english} />
-          </>
+          <span className="english-prompt" lang="en">
+            {question.word.english}
+          </span>
         ) : (
           <>
             <WordArt word={question.word} />
-            {game.id === "verbs" && (
+            {game.showItalianPrompt && (
               <span className="italian-prompt">{question.word.italian}</span>
             )}
           </>
         )}
+        <AudioButton word={question.word.english} />
       </div>
       <div
         className={`answer-grid ${visualChoices ? "visual-answers" : "text-answers"}`}
@@ -632,7 +664,7 @@ export function Results({ game }: { game: Game }) {
   ) {
     return (
       <main id="main" className="empty-state page-width">
-        <Illustration asset="1f331" />
+        <Illustration asset="seedling" />
         <h1>Una nuova avventura?</h1>
         <p>
           Qui non conserviamo le partite. Le parole imparate restano con te.
@@ -664,7 +696,7 @@ export function Results({ game }: { game: Game }) {
       <section className="result-celebration">
         <div className="trophy-art">
           <Star className="trophy-star first" size={23} fill="currentColor" />
-          <Illustration asset="1f3c6" />
+          <Illustration asset="trophy" />
           <Star className="trophy-star second" size={18} fill="currentColor" />
         </div>
         <span className="eyebrow">AVVENTURA COMPLETATA</span>

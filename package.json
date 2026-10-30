@@ -7,11 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test src/lib/games.test.mjs"
+    "test": "node --experimental-strip-types --test src/lib/games.test.mjs src/lib/audio.test.mjs scripts/generate-audio.test.mjs",
+    "audio:generate": "node --env-file-if-exists=.env.local --experimental-strip-types scripts/generate-audio.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.57.0",
-    "next": "16.4.0",
+    "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

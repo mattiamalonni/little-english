@@ -405,6 +405,20 @@ svg {
 .art-numbers {
   background-color: #def0eb;
 }
+.art-weather {
+  background-color: #e2eff5;
+}
+.art-nature {
+  background-color: #e8f0df;
+}
+.card-weather .category-label,
+.art-weather .art-spark {
+  color: #5685a0;
+}
+.card-nature .category-label,
+.art-nature .art-spark {
+  color: #66884e;
+}
 .card-food .category-label,
 .art-food .art-spark {
   color: #a35267;
@@ -810,6 +824,8 @@ svg {
 }
 .site-footer > span {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 5px;
 }
@@ -920,7 +936,7 @@ svg {
   justify-content: center;
   gap: 6px;
   width: 160px;
-  min-height: 178px;
+  min-height: 188px;
   flex-shrink: 0;
   color: var(--green);
 }
@@ -929,12 +945,12 @@ svg {
 }
 .counting-dots {
   display: grid;
-  grid-template-columns: repeat(5, 13px);
+  grid-template-columns: repeat(6, 13px);
   grid-auto-rows: 13px;
   align-content: start;
   gap: 5px;
-  width: 85px;
-  height: 67px;
+  width: 103px;
+  height: 85px;
 }
 .counting-dot {
   width: 13px;

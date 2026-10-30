@@ -14,7 +14,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Little English | Piccole parole, grandi scoperte",
+  title: "Little English | Piccole parole, grandi scoperte | elevenlabs.io",
   description:
     "Un piccolo mondo di minigiochi per scoprire colori, animali, oggetti, verbi, cibi e numeri in inglese. Senza account e senza salvataggi.",
 };
